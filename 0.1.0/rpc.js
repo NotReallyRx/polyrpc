@@ -37,16 +37,13 @@ function platformName() {
   return 'unknown';
 }
 
-function imageUrl() {
-  return new URL(`./images/logo.png`, import.meta.url).href;
-}
-
 class RpcSession {
   #WebSocket;
   #token;
   #client;
   #state;
   #version;
+  #largeImage;
   #socket = null;
   #heartbeat = null;
   #heartbeatStart = null;
@@ -64,12 +61,13 @@ class RpcSession {
   #resolveReady = null;
   #rejectReady = null;
 
-  constructor({ WebSocket, token, client, state, version, onStatus, onAccount }) {
+  constructor({ WebSocket, token, client, state, version, largeImage, onStatus, onAccount }) {
     this.#WebSocket = WebSocket;
     this.#token = token;
     this.#client = client;
     this.#state = state;
     this.#version = version;
+    this.#largeImage = largeImage;
     this.#onStatus = typeof onStatus === 'function' ? onStatus : () => {};
     this.#onAccount = typeof onAccount === 'function' ? onAccount : () => {};
   }
@@ -96,6 +94,7 @@ class RpcSession {
     if (next.client !== undefined) this.#client = field(next.client, 'PolyRPC');
     if (next.state !== undefined) this.#state = field(next.state);
     if (next.version !== undefined) this.#version = field(next.version);
+    if (next.largeImage !== undefined) this.#largeImage = next.largeImage;
 
     if (this.#ready) this.#sendPresence();
   }
@@ -235,6 +234,7 @@ class RpcSession {
     const name = field(this.#client, 'PolyRPC');
     const details = field(this.#state);
     const state = field(this.#version);
+    const largeImage = this.#largeImage || 'logo';
 
     return {
       since: 0,
@@ -245,7 +245,7 @@ class RpcSession {
           details: details || undefined,
           state: state || undefined,
           assets: {
-            large_image: imageUrl(),
+            large_image: largeImage,
             large_text: name,
           },
           timestamps: { start: this.#startedAt },
@@ -369,7 +369,7 @@ class RpcSession {
   }
 }
 
-export async function sendRpcRequest({ state, version, client, id, onStatus, onAccount } = {}) {
+export async function sendRpcRequest({ state, version, client, id, largeImage, onStatus, onAccount } = {}) {
   const token = normalizeToken(id);
   const WebSocket = getWebSocket();
 
@@ -379,6 +379,7 @@ export async function sendRpcRequest({ state, version, client, id, onStatus, onA
     client: field(client, 'PolyRPC'),
     state: field(state),
     version: field(version),
+    largeImage,
     onStatus,
     onAccount,
   });

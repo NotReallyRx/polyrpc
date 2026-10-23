@@ -58,12 +58,10 @@ class PolyRpcMod extends PolyMod {
     alert("Token cleared.");
   };
 
-  setToken = async () => {
-    const token = await this.askToken();
-    if (!token) {
-      return;
-    }
-    const trimmed = String(token).trim();
+  setToken = () => {
+    const input = prompt("Discord user token (saved to localStorage)");
+    if (input === null) return;
+    const trimmed = String(input).trim();
     if (!trimmed) {
       alert("Token not set.");
       return;
@@ -73,89 +71,7 @@ class PolyRpcMod extends PolyMod {
       return;
     }
     this.setStoredToken(trimmed);
-    alert("Token saved.");
-  };
-
-  askToken = () => {
-    return new Promise((resolve) => {
-      const overlay = document.createElement("div");
-      overlay.style.cssText =
-        "position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);font-family:Arial,sans-serif;";
-
-      const form = document.createElement("form");
-      form.style.cssText =
-        "display:flex;flex-direction:column;gap:14px;width:min(420px,calc(100vw - 40px));padding:22px;border-radius:12px;background:#1c1c1c;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);";
-
-      const title = document.createElement("h2");
-      title.textContent = "Discord RPC";
-      title.style.cssText = "margin:0;font-size:20px;";
-
-      const label = document.createElement("label");
-      label.textContent = "Discord user token";
-      label.style.cssText =
-        "display:flex;flex-direction:column;gap:6px;font-size:13px;color:#bbb;";
-
-      const input = document.createElement("input");
-      input.type = "password";
-      input.autocomplete = "off";
-      input.spellcheck = false;
-      input.placeholder = "Paste your user token";
-      input.style.cssText =
-        "padding:10px 12px;border:1px solid #3a3a3a;border-radius:8px;background:#101010;color:#fff;font:inherit;outline:none;";
-      label.appendChild(input);
-
-      const note = document.createElement("p");
-      note.textContent = "Token is stored in localStorage.";
-      note.style.cssText = "margin:0;font-size:12px;line-height:1.5;color:#888;";
-
-      const row = document.createElement("div");
-      row.style.cssText = "display:flex;gap:8px;justify-content:flex-end;";
-
-      const cancel = document.createElement("button");
-      cancel.type = "button";
-      cancel.textContent = "Cancel";
-      cancel.style.cssText =
-        "padding:9px 14px;border:1px solid #3a3a3a;border-radius:8px;background:transparent;color:#bbb;font:inherit;cursor:pointer;";
-
-      const submit = document.createElement("button");
-      submit.type = "submit";
-      submit.textContent = "Set";
-      submit.style.cssText =
-        "padding:9px 14px;border:0;border-radius:8px;background:#5865f2;color:#fff;font:inherit;font-weight:bold;cursor:pointer;";
-
-      row.appendChild(cancel);
-      row.appendChild(submit);
-      form.appendChild(title);
-      form.appendChild(label);
-      form.appendChild(note);
-      form.appendChild(row);
-      overlay.appendChild(form);
-
-      const finish = (value) => {
-        document.removeEventListener("keydown", onKeyDown);
-        input.value = "";
-        overlay.remove();
-        resolve(value);
-      };
-
-      const onKeyDown = (event) => {
-        if (event.key === "Escape") finish("");
-      };
-
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        finish(input.value);
-      });
-
-      cancel.addEventListener("click", () => finish(""));
-      overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) finish("");
-      });
-      document.addEventListener("keydown", onKeyDown);
-
-      document.body.appendChild(overlay);
-      input.focus();
-    });
+    alert("Token saved to localStorage.");
   };
 
   updateToggleLabel = () => {
@@ -202,6 +118,7 @@ class PolyRpcMod extends PolyMod {
         client: "polymodloader",
         version: "0.6.3",
         state: state,
+        largeImage: "logo",
       });
 
       alert("Discord RPC connected.");
@@ -307,7 +224,7 @@ class PolyRpcMod extends PolyMod {
       if (this.rpc?.connected) {
         try {
           const state = this.getScreenState();
-          this.rpc.update({ state: state, client: "polymodloader", version: "0.6.3" });
+          this.rpc.update({ state: state, client: "polymodloader", version: "0.6.3", largeImage: "logo" });
         } catch (e) {
           // ignore
         }
