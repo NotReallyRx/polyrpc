@@ -6,7 +6,9 @@ class PolyRpcMod extends PolyMod {
   connecting = false;
   toggleBtn = null;
   stateTimer = null;
-  storageKey = "polyrpc_token";
+  tokenKey = "polyrpc_token";
+  appIdKey = "polyrpc_appid";
+  defaultAppId = "1563193636215193632";
 
   init = (pml) => {
     this.pml = pml;
@@ -16,6 +18,10 @@ class PolyRpcMod extends PolyMod {
       {
         text: "Set Discord Token",
         callback: () => this.setToken(),
+      },
+      {
+        text: "Set Application ID",
+        callback: () => this.setAppId(),
       },
       {
         text: "Clear Discord Token",
@@ -35,7 +41,7 @@ class PolyRpcMod extends PolyMod {
 
   getToken = () => {
     try {
-      return localStorage.getItem(this.storageKey) || "";
+      return localStorage.getItem(this.tokenKey) || "";
     } catch (e) {
       return "";
     }
@@ -43,7 +49,25 @@ class PolyRpcMod extends PolyMod {
 
   setStoredToken = (token) => {
     try {
-      localStorage.setItem(this.storageKey, token);
+      localStorage.setItem(this.tokenKey, token);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  getAppId = () => {
+    try {
+      const stored = localStorage.getItem(this.appIdKey);
+      if (stored && stored.trim()) return stored.trim();
+      return this.defaultAppId;
+    } catch (e) {
+      return this.defaultAppId;
+    }
+  };
+
+  setStoredAppId = (id) => {
+    try {
+      localStorage.setItem(this.appIdKey, id);
     } catch (e) {
       // ignore
     }
@@ -51,7 +75,7 @@ class PolyRpcMod extends PolyMod {
 
   clearToken = () => {
     try {
-      localStorage.removeItem(this.storageKey);
+      localStorage.removeItem(this.tokenKey);
     } catch (e) {
       // ignore
     }
@@ -72,6 +96,22 @@ class PolyRpcMod extends PolyMod {
     }
     this.setStoredToken(trimmed);
     alert("Token saved to localStorage.");
+  };
+
+  setAppId = () => {
+    const input = prompt("Discord Application ID (saved to localStorage)", this.getAppId());
+    if (input === null) return;
+    const trimmed = String(input).trim();
+    if (!trimmed) {
+      alert("Application ID not set.");
+      return;
+    }
+    if (/\s/.test(trimmed)) {
+      alert("Application ID must not contain whitespace.");
+      return;
+    }
+    this.setStoredAppId(trimmed);
+    alert("Application ID saved to localStorage.");
   };
 
   updateToggleLabel = () => {
@@ -107,6 +147,11 @@ class PolyRpcMod extends PolyMod {
       alert("Set a Discord token first via Quick actions > Set Discord Token.");
       return;
     }
+    const appId = this.getAppId();
+    if (!appId) {
+      alert("Set a Discord Application ID first via Quick actions > Set Application ID.");
+      return;
+    }
 
     this.connecting = true;
     try {
@@ -119,6 +164,7 @@ class PolyRpcMod extends PolyMod {
         version: "0.6.3",
         state: state,
         largeImage: "logo",
+        applicationId: appId,
       });
 
       alert("Discord RPC connected.");
@@ -224,7 +270,8 @@ class PolyRpcMod extends PolyMod {
       if (this.rpc?.connected) {
         try {
           const state = this.getScreenState();
-          this.rpc.update({ state: state, client: "polymodloader", version: "0.6.3", largeImage: "logo" });
+          const appId = this.getAppId();
+          this.rpc.update({ state: state, client: "polymodloader", version: "0.6.3", largeImage: "logo", applicationId: appId });
         } catch (e) {
           // ignore
         }

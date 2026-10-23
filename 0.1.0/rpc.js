@@ -44,6 +44,7 @@ class RpcSession {
   #state;
   #version;
   #largeImage;
+  #applicationId;
   #socket = null;
   #heartbeat = null;
   #heartbeatStart = null;
@@ -61,13 +62,14 @@ class RpcSession {
   #resolveReady = null;
   #rejectReady = null;
 
-  constructor({ WebSocket, token, client, state, version, largeImage, onStatus, onAccount }) {
+  constructor({ WebSocket, token, client, state, version, largeImage, applicationId, onStatus, onAccount }) {
     this.#WebSocket = WebSocket;
     this.#token = token;
     this.#client = client;
     this.#state = state;
     this.#version = version;
     this.#largeImage = largeImage;
+    this.#applicationId = applicationId;
     this.#onStatus = typeof onStatus === 'function' ? onStatus : () => {};
     this.#onAccount = typeof onAccount === 'function' ? onAccount : () => {};
   }
@@ -95,6 +97,7 @@ class RpcSession {
     if (next.state !== undefined) this.#state = field(next.state);
     if (next.version !== undefined) this.#version = field(next.version);
     if (next.largeImage !== undefined) this.#largeImage = next.largeImage;
+    if (next.applicationId !== undefined) this.#applicationId = next.applicationId;
 
     if (this.#ready) this.#sendPresence();
   }
@@ -236,21 +239,25 @@ class RpcSession {
     const state = field(this.#version);
     const largeImage = this.#largeImage || 'logo';
 
+    const activity = {
+      name,
+      type: 0,
+      details: details || undefined,
+      state: state || undefined,
+      assets: {
+        large_image: largeImage,
+        large_text: name,
+      },
+      timestamps: { start: this.#startedAt },
+    };
+
+    if (this.#applicationId) {
+      activity.application_id = String(this.#applicationId).trim();
+    }
+
     return {
       since: 0,
-      activities: [
-        {
-          name,
-          type: 0,
-          details: details || undefined,
-          state: state || undefined,
-          assets: {
-            large_image: largeImage,
-            large_text: name,
-          },
-          timestamps: { start: this.#startedAt },
-        },
-      ],
+      activities: [activity],
       status: 'online',
       afk: false,
     };
@@ -369,7 +376,7 @@ class RpcSession {
   }
 }
 
-export async function sendRpcRequest({ state, version, client, id, largeImage, onStatus, onAccount } = {}) {
+export async function sendRpcRequest({ state, version, client, id, largeImage, applicationId, onStatus, onAccount } = {}) {
   const token = normalizeToken(id);
   const WebSocket = getWebSocket();
 
@@ -380,6 +387,7 @@ export async function sendRpcRequest({ state, version, client, id, largeImage, o
     state: field(state),
     version: field(version),
     largeImage,
+    applicationId,
     onStatus,
     onAccount,
   });
