@@ -3,6 +3,7 @@ const MAX_FIELD_LENGTH = 128;
 const MAX_TOKEN_LENGTH = 512;
 const MAX_ATTEMPTS = 5;
 const CONNECT_TIMEOUT = 20000;
+const DEFAULT_APP_ID = '1563193636215193632';
 
 function field(value, fallback = '') {
   if (typeof value !== 'string') return fallback;
@@ -44,7 +45,6 @@ class RpcSession {
   #state;
   #version;
   #largeImage;
-  #applicationId;
   #socket = null;
   #heartbeat = null;
   #heartbeatStart = null;
@@ -62,14 +62,13 @@ class RpcSession {
   #resolveReady = null;
   #rejectReady = null;
 
-  constructor({ WebSocket, token, client, state, version, largeImage, applicationId, onStatus, onAccount }) {
+  constructor({ WebSocket, token, client, state, version, largeImage, onStatus, onAccount }) {
     this.#WebSocket = WebSocket;
     this.#token = token;
     this.#client = client;
     this.#state = state;
     this.#version = version;
     this.#largeImage = largeImage;
-    this.#applicationId = applicationId;
     this.#onStatus = typeof onStatus === 'function' ? onStatus : () => {};
     this.#onAccount = typeof onAccount === 'function' ? onAccount : () => {};
   }
@@ -97,7 +96,6 @@ class RpcSession {
     if (next.state !== undefined) this.#state = field(next.state);
     if (next.version !== undefined) this.#version = field(next.version);
     if (next.largeImage !== undefined) this.#largeImage = next.largeImage;
-    if (next.applicationId !== undefined) this.#applicationId = next.applicationId;
 
     if (this.#ready) this.#sendPresence();
   }
@@ -248,12 +246,9 @@ class RpcSession {
         large_image: largeImage,
         large_text: name,
       },
+      application_id: DEFAULT_APP_ID,
       timestamps: { start: this.#startedAt },
     };
-
-    if (this.#applicationId) {
-      activity.application_id = String(this.#applicationId).trim();
-    }
 
     return {
       since: 0,
@@ -376,7 +371,7 @@ class RpcSession {
   }
 }
 
-export async function sendRpcRequest({ state, version, client, id, largeImage, applicationId, onStatus, onAccount } = {}) {
+export async function sendRpcRequest({ state, version, client, id, largeImage, onStatus, onAccount } = {}) {
   const token = normalizeToken(id);
   const WebSocket = getWebSocket();
 
@@ -387,7 +382,6 @@ export async function sendRpcRequest({ state, version, client, id, largeImage, a
     state: field(state),
     version: field(version),
     largeImage,
-    applicationId,
     onStatus,
     onAccount,
   });
