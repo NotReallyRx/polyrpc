@@ -37,8 +37,8 @@ function platformName() {
   return 'unknown';
 }
 
-function imageUrl(client) {
-  return new URL(`./images/${encodeURIComponent(client)}.png`, import.meta.url).href;
+function imageUrl() {
+  return new URL(`./images/logo.png`, import.meta.url).href;
 }
 
 class RpcSession {
@@ -245,7 +245,7 @@ class RpcSession {
           details: details || undefined,
           state: state || undefined,
           assets: {
-            large_image: imageUrl(name),
+            large_image: imageUrl(),
             large_text: name,
           },
           timestamps: { start: this.#startedAt },

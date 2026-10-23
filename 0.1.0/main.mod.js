@@ -243,6 +243,9 @@ class PolyRpcMod extends PolyMod {
 
       const trackInfoUi = document.querySelector(".track-info-ui");
       if (trackInfoUi && !this.isHidden(trackInfoUi)) {
+        const trackNameEl = trackInfoUi.querySelector(".side-panel h2");
+        const trackName = trackNameEl && trackNameEl.textContent ? trackNameEl.textContent.trim() : "";
+        if (trackName) return `Track Info: ${trackName}`;
         return "Track Info";
       }
 
