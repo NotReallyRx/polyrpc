@@ -4,9 +4,9 @@ import { sendRpcRequest } from "./rpc.js";
 class PolyRpcMod extends PolyMod {
   rpc = null;
   connecting = false;
-  token = "";
   toggleBtn = null;
   stateTimer = null;
+  storageKey = "polyrpc_token";
 
   init = (pml) => {
     this.pml = pml;
@@ -16,6 +16,10 @@ class PolyRpcMod extends PolyMod {
       {
         text: "Set Discord Token",
         callback: () => this.setToken(),
+      },
+      {
+        text: "Clear Discord Token",
+        callback: () => this.clearToken(),
       },
     ]);
     pml.addCustomClickableButtons("Discord Rich Presence", [
@@ -27,6 +31,31 @@ class PolyRpcMod extends PolyMod {
 
     this.updateToggleLabel();
     this.startStateUpdater();
+  };
+
+  getToken = () => {
+    try {
+      return localStorage.getItem(this.storageKey) || "";
+    } catch (e) {
+      return "";
+    }
+  };
+
+  setStoredToken = (token) => {
+    try {
+      localStorage.setItem(this.storageKey, token);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  clearToken = () => {
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch (e) {
+      // ignore
+    }
+    alert("Token cleared.");
   };
 
   setToken = async () => {
@@ -43,8 +72,8 @@ class PolyRpcMod extends PolyMod {
       alert("Token must not contain whitespace.");
       return;
     }
-    this.token = trimmed;
-    alert("Token set in memory.");
+    this.setStoredToken(trimmed);
+    alert("Token saved.");
   };
 
   askToken = () => {
@@ -76,7 +105,7 @@ class PolyRpcMod extends PolyMod {
       label.appendChild(input);
 
       const note = document.createElement("p");
-      note.textContent = "The token stays in memory and is never stored by this mod.";
+      note.textContent = "Token is stored in localStorage.";
       note.style.cssText = "margin:0;font-size:12px;line-height:1.5;color:#888;";
 
       const row = document.createElement("div");
@@ -157,7 +186,8 @@ class PolyRpcMod extends PolyMod {
       this.updateToggleLabel();
       return;
     }
-    if (!this.token) {
+    const token = this.getToken();
+    if (!token) {
       alert("Set a Discord token first via Quick actions > Set Discord Token.");
       return;
     }
@@ -168,7 +198,7 @@ class PolyRpcMod extends PolyMod {
 
       const state = this.getScreenState();
       this.rpc = await sendRpcRequest({
-        id: this.token,
+        id: token,
         client: "polymodloader",
         version: "0.6.3",
         state: state,
